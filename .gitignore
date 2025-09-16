@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+.env
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Git
+.git
+
+# Astro CLI / Airflow
+.astro/
+logs/
+include/
+
+# dbt
+dags/dbt/**/target/**
+dags/dbt/**/dbt_modules/**
+dags/dbt/**/dbt_packages/**
+dbt/**/*.log
+
+# Docker
+*.log
+*.pid
+*.seed
+
+# Misc
+*.sqlite
