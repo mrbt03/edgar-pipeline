@@ -1,0 +1,11 @@
+name: edgar
+version: 1.0.0
+profile: edgar_profile
+model-paths: ["models"]
+models:
+  edgar:
+    +materialized: view
+    staging:
+      +schema: staging
+    marts:
+      +schema: marts
