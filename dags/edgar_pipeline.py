@@ -1,7 +1,7 @@
 from airflow import DAG
-from airflow.utils.dates import days_ago
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
+from airflow.utils import timezone
+from airflow.providers.standard.operators.python import PythonOperator
+from airflow.providers.standard.operators.bash import BashOperator
 
 def fetch_to_s3(**ctx):
     pass
@@ -11,11 +11,12 @@ def load_to_redshift(**ctx):
 
 with DAG(
     dag_id="edgar_pipeline",
-    start_date=days_ago(1),
-    schedule_interval=None,
+    start_date=timezone.datetime(2024, 1, 1),
+    schedule=None,
     catchup=False,
     default_args={"owner": "data-eng"},
 ) as dag:
+
 
     fetch_filings = PythonOperator(
         task_id="fetch_filings_to_s3",
