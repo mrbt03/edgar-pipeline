@@ -1,10 +1,18 @@
+import os
 from airflow import DAG
 from airflow.utils import timezone
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.operators.bash import BashOperator
-
+from dags.utils.s3_io import put_bytes
+from dags.utils.edgar_fetch import fetch_master_index
 def fetch_to_s3(**ctx):
-    pass
+    ds = ctx["ds_nodash"]  # YYYYMMDD
+    bucket = os.getenv("RAW_BUCKET")
+    if not bucket:
+        raise ValueError("RAW_BUCKET env var is required")
+    key = f"edgar/raw/master_index/{ds}.idx"
+    data = fetch_master_index(ds)
+    put_bytes(bucket, key, data)
 
 def load_to_redshift(**ctx):
     pass
