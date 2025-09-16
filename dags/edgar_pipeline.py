@@ -5,6 +5,8 @@ from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.operators.bash import BashOperator
 from dags.utils.s3_io import put_bytes
 from dags.utils.edgar_fetch import fetch_master_index
+import psycopg2
+
 def fetch_to_s3(**ctx):
     ds = ctx["ds_nodash"]  # YYYYMMDD
     bucket = os.getenv("RAW_BUCKET")
@@ -15,7 +17,46 @@ def fetch_to_s3(**ctx):
     put_bytes(bucket, key, data)
 
 def load_to_redshift(**ctx):
-    pass
+    ds = ctx["ds_nodash"]
+    bucket = os.getenv("RAW_BUCKET")
+    schema_raw = os.getenv("REDSHIFT_SCHEMA_RAW", "raw")
+    iam_role = os.getenv("REDSHIFT_IAM_ROLE_ARN")
+
+    key = f"edgar/raw/master_index/{ds}.idx"
+    s3_uri = f"s3://{bucket}/{key}"
+
+    conn = psycopg2.connect(
+        host=os.getenv("REDSHIFT_HOST"),
+        port=os.getenv("REDSHIFT_PORT", "5439"),
+        dbname=os.getenv("REDSHIFT_DB"),
+        user=os.getenv("REDSHIFT_USER"),
+        password=os.getenv("REDSHIFT_PASSWORD"),
+        connect_timeout=10,
+    )
+    conn.autocommit = True
+    cur = conn.cursor()
+
+    # create raw table if not exists (tweak cols to your real parse downstream)
+    cur.execute(f"""
+        create schema if not exists {schema_raw};
+        create table if not exists {schema_raw}.edgar_master_raw (
+            line text
+        );
+        truncate table {schema_raw}.edgar_master_raw;
+    """)
+
+    # COPY the raw file  adjust FORMAT as needed once you parse
+    cur.execute(f"""
+        copy {schema_raw}.edgar_master_raw
+        from %s
+        iam_role %s
+        format as TEXT
+        compupdate off
+        statupdate off;
+    """, (s3_uri, iam_role))
+
+    cur.close()
+    conn.close()
 
 with DAG(
     dag_id="edgar_pipeline",
