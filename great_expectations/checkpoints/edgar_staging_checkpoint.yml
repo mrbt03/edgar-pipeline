@@ -1,0 +1,10 @@
+name: edgar_staging_checkpoint
+config_version: 1.0
+class_name: Checkpoint
+run_name_template: "%Y-%m-%d-%H%M%S-edgar-staging"
+validations:
+  - batch_request:
+      # You will wire a proper datasource later
+      datasource_name: redshift
+      data_asset_name: stg_edgar_master
+    expectation_suite_name: edgar_staging_suite

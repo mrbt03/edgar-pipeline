@@ -34,3 +34,4 @@ dbt/**/*.log
 
 # Misc
 *.sqlite
+great_expectations/uncommitted/

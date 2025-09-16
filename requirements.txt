@@ -2,4 +2,6 @@
 apache-airflow-providers-amazon
 boto3
 requests
+psycopg2-binary
+great_expectations
 
