@@ -82,6 +82,24 @@ def smoke_query_duckdb(**_):
     finally:
         con.close()
 
+
+def verify_duckdb_post_load(**_):
+    duckdb_path = os.getenv("DUCKDB_PATH", "/data/edgar.duckdb")
+    con = duckdb.connect(duckdb_path)
+    try:
+        cnt = con.execute("select count(*) from raw.edgar_master").fetchone()[0]
+        if cnt <= 0:
+            raise AssertionError("raw.edgar_master is empty after load")
+        # basic non-null check on key fields
+        nulls = con.execute(
+            "select sum(case when cik is null or form_type is null then 1 else 0 end) from raw.edgar_master"
+        ).fetchone()[0]
+        if nulls and nulls > 0:
+            raise AssertionError("Null key fields detected in raw.edgar_master")
+        print(f"Post-load verification passed: {cnt} rows")
+    finally:
+        con.close()
+
 def run_ge_checkpoint(**_):
     import pandas as pd
     import great_expectations as ge
@@ -145,5 +163,9 @@ with DAG(
         python_callable=smoke_query_duckdb,
     )
 
+    postload_verify = PythonOperator(
+        task_id="verify_post_load",
+        python_callable=verify_duckdb_post_load,
+    )
 
-    fetch_filings >> load_raw >> dbt_run >> ge_validate >> smoke
+    fetch_filings >> load_raw >> postload_verify >> dbt_run >> ge_validate >> smoke
