@@ -9,4 +9,5 @@ def test_dag_loaded():
         "load_duckdb",
         "run_dbt_models",
         "run_ge_validation",
+        "run_smoke_query",
     ]

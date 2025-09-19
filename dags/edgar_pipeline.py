@@ -67,6 +67,21 @@ def load_to_duckdb(**ctx):
         )
     con.close()
 
+
+def smoke_query_duckdb(**_):
+    duckdb_path = os.getenv("DUCKDB_PATH", "/data/edgar.duckdb")
+    con = duckdb.connect(duckdb_path)
+    try:
+        rows = con.execute(
+            "select form_type, count(*) as c from raw.edgar_master group by 1 order by 2 desc limit 10"
+        ).fetchall()
+        print("Top form_type counts:")
+        for r in rows:
+            print(f"{r[0]}\t{r[1]}")
+        return rows
+    finally:
+        con.close()
+
 def run_ge_checkpoint(**_):
     import os
     import great_expectations as ge
@@ -111,5 +126,10 @@ with DAG(
         python_callable=run_ge_checkpoint,
     )
 
+    smoke = PythonOperator(
+        task_id="run_smoke_query",
+        python_callable=smoke_query_duckdb,
+    )
 
-    fetch_filings >> load_raw >> dbt_run >> ge_validate
+
+    fetch_filings >> load_raw >> dbt_run >> ge_validate >> smoke
