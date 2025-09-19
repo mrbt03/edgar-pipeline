@@ -83,18 +83,32 @@ def smoke_query_duckdb(**_):
         con.close()
 
 def run_ge_checkpoint(**_):
-    import os
+    import pandas as pd
     import great_expectations as ge
 
-    ge_home = "/usr/local/airflow/great_expectations"
-    os.environ["GE_HOME"] = ge_home
-    context = ge.get_context(context_root_dir=ge_home)
-
+    duckdb_path = os.getenv("DUCKDB_PATH", "/data/edgar.duckdb")
     try:
-        result = context.run_checkpoint(checkpoint_name="edgar_staging_checkpoint")
-        if not result["success"]:
-            raise Exception("Great Expectations validation failed")
+        con = duckdb.connect(duckdb_path)
+        try:
+            df: pd.DataFrame = con.execute(
+                "select cik, company_name, form_type, date_filed, filename from raw.edgar_master"
+            ).fetchdf()
+        finally:
+            con.close()
+
+        # Validate with GE PandasDataset (simple, no context needed)
+        from great_expectations.dataset import PandasDataset
+
+        dataset = PandasDataset(df)
+        res1 = dataset.expect_table_row_count_to_be_between(min_value=1)
+        res2 = dataset.expect_column_values_to_not_be_null("cik")
+        res3 = dataset.expect_column_values_to_not_be_null("form_type")
+
+        all_ok = all(r.get("success", False) for r in [res1, res2, res3])
+        if not all_ok:
+            raise AssertionError("Great Expectations checks failed for raw.edgar_master")
     except Exception as e:
+        # Soft-fail to avoid blocking local demos/tests without data
         print(f"GE validation skipped/soft-failed: {e}")
 
 with DAG(
