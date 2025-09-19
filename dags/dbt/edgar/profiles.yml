@@ -1,0 +1,7 @@
+edgar_profile:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      threads: 4
+      path: "{{ env_var('DUCKDB_PATH', '/data/edgar.duckdb') }}"
