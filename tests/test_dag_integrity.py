@@ -6,7 +6,7 @@ def test_dag_loaded():
     dag = dag_bag.dags["edgar_pipeline"]
     assert [t.task_id for t in dag.tasks] == [
         "fetch_filings_to_s3",
-        "load_raw_to_redshift",
+        "load_duckdb",
         "run_dbt_models",
         "run_ge_validation",
     ]

@@ -1,62 +1,71 @@
 import os
+import io
+import duckdb
+import boto3
 from airflow import DAG
 from airflow.utils import timezone
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.operators.bash import BashOperator
 from dags.utils.s3_io import put_bytes
 from dags.utils.edgar_fetch import fetch_master_index
-import psycopg2
 
 def fetch_to_s3(**ctx):
     ds = ctx["ds_nodash"]  # YYYYMMDD
-    bucket = os.getenv("RAW_BUCKET")
+    bucket = os.getenv("EDGAR_S3_BUCKET")
     if not bucket:
-        raise ValueError("RAW_BUCKET env var is required")
+        raise ValueError("EDGAR_S3_BUCKET env var is required")
     key = f"edgar/raw/master_index/{ds}.idx"
     data = fetch_master_index(ds)
     put_bytes(bucket, key, data)
 
-def load_to_redshift(**ctx):
+def load_to_duckdb(**ctx):
     ds = ctx["ds_nodash"]
-    bucket = os.getenv("RAW_BUCKET")
-    schema_raw = os.getenv("REDSHIFT_SCHEMA_RAW", "raw")
-    iam_role = os.getenv("REDSHIFT_IAM_ROLE_ARN")
-
+    bucket = os.getenv("EDGAR_S3_BUCKET")
+    if not bucket:
+        raise ValueError("EDGAR_S3_BUCKET env var is required")
     key = f"edgar/raw/master_index/{ds}.idx"
-    s3_uri = f"s3://{bucket}/{key}"
+    duckdb_path = os.getenv("DUCKDB_PATH", "/data/edgar.duckdb")
 
-    conn = psycopg2.connect(
-        host=os.getenv("REDSHIFT_HOST"),
-        port=os.getenv("REDSHIFT_PORT", "5439"),
-        dbname=os.getenv("REDSHIFT_DB"),
-        user=os.getenv("REDSHIFT_USER"),
-        password=os.getenv("REDSHIFT_PASSWORD"),
-        connect_timeout=10,
-    )
-    conn.autocommit = True
-    cur = conn.cursor()
+    s3 = boto3.client("s3", region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+    obj = s3.get_object(Bucket=bucket, Key=key)
+    body: bytes = obj["Body"].read()
 
-    # create raw table if not exists (tweak cols to your real parse downstream)
-    cur.execute(f"""
-        create schema if not exists {schema_raw};
-        create table if not exists {schema_raw}.edgar_master_raw (
-            line text
+    # Parse .idx: expect pipe-delimited lines with 5 fields
+    lines = io.BytesIO(body).read().decode("utf-8", errors="ignore").splitlines()
+    records = []
+    for line in lines:
+        if "|" not in line:
+            continue
+        parts = line.split("|")
+        if len(parts) < 5:
+            continue
+        cik, company_name, form_type, date_filed, filename = parts[:5]
+        # skip header row if present
+        if cik.strip().lower() == "cik" and company_name.strip().lower() == "company name":
+            continue
+        records.append((cik.strip(), company_name.strip(), form_type.strip(), date_filed.strip(), filename.strip()))
+
+    con = duckdb.connect(duckdb_path)
+    con.execute("create schema if not exists raw;")
+    con.execute(
+        """
+        create table if not exists raw.edgar_master (
+            cik text,
+            company_name text,
+            form_type text,
+            date_filed text,
+            filename text
         );
-        truncate table {schema_raw}.edgar_master_raw;
-    """)
-
-    # COPY the raw file  adjust FORMAT as needed once you parse
-    cur.execute(f"""
-        copy {schema_raw}.edgar_master_raw
-        from %s
-        iam_role %s
-        format as TEXT
-        compupdate off
-        statupdate off;
-    """, (s3_uri, iam_role))
-
-    cur.close()
-    conn.close()
+        """
+    )
+    # Truncate then insert fresh
+    con.execute("delete from raw.edgar_master;")
+    if records:
+        con.executemany(
+            "insert into raw.edgar_master (cik, company_name, form_type, date_filed, filename) values (?, ?, ?, ?, ?)",
+            records,
+        )
+    con.close()
 
 def run_ge_checkpoint(**_):
     import os
@@ -88,8 +97,8 @@ with DAG(
     )
 
     load_raw = PythonOperator(
-        task_id="load_raw_to_redshift",
-        python_callable=load_to_redshift,
+        task_id="load_duckdb",
+        python_callable=load_to_duckdb,
     )
 
     dbt_run = BashOperator(

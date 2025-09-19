@@ -11,7 +11,7 @@ from dags.edgar_pipeline import fetch_to_s3
 def test_fetch_to_s3_writes_to_s3(monkeypatch, ds):
     # 1) mock env + bucket
     os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-    os.environ["RAW_BUCKET"] = "test-bucket"
+    os.environ["EDGAR_S3_BUCKET"] = "test-bucket"
     s3 = boto3.client("s3", region_name="us-east-1")
     s3.create_bucket(Bucket="test-bucket")
 
