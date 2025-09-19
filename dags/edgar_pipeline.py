@@ -118,7 +118,7 @@ with DAG(
 
     dbt_run = BashOperator(
         task_id="run_dbt_models",
-        bash_command="cd /usr/local/airflow/dags/dbt/edgar && dbt deps && dbt run",
+        bash_command="cd /usr/local/airflow/dags/dbt/edgar && dbt deps && dbt run --profiles-dir .",
     )
 
     ge_validate = PythonOperator(
