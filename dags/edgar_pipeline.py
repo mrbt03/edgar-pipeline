@@ -45,6 +45,10 @@ def load_to_duckdb(**ctx):
             continue
         records.append((cik.strip(), company_name.strip(), form_type.strip(), date_filed.strip(), filename.strip()))
 
+    # Ensure parent directory exists for persistence (e.g., mounted volume or bind mount)
+    parent_dir = os.path.dirname(duckdb_path) or "."
+    os.makedirs(parent_dir, exist_ok=True)
+
     con = duckdb.connect(duckdb_path)
     con.execute("create schema if not exists raw;")
     con.execute(

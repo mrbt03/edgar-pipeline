@@ -1,0 +1,5 @@
+services:
+  scheduler:
+    volumes:
+      - ./data:/data
+
