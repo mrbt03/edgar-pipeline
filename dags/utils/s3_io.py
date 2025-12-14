@@ -24,7 +24,7 @@ def put_bytes(bucket: str, key: str, data: bytes):
     try:
         s3_client().put_object(Bucket=bucket, Key=key, Body=data)
     except ClientError as e:
-        raise RuntimeError(f"Failed to upload bytes to S3 bucket {bucket} with key {key}: {e}")
+        raise RuntimeError(f"Failed to upload bytes to S3 bucket {bucket} with key {key}: {e}") from e
 
 # check if an object exists in an S3 bucket
 def object_exists(bucket: str, key: str) -> bool:
