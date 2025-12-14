@@ -35,4 +35,4 @@ def object_exists(bucket: str, key: str) -> bool:
             print("Object does not exist")
             return False
         else:
-            raise e
+            raise
