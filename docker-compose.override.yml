@@ -1,0 +1,5 @@
+services:
+  scheduler:
+    volumes:
+    # mount the local ./data folder into /data inside the scheduler container
+      - ./data:/data
