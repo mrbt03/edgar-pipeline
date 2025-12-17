@@ -34,8 +34,10 @@ def object_exists(bucket: str, key: str) -> bool:
         s3.head_object(Bucket=bucket, Key=key)
         return True
     # if the object does not exist, return False
-    except s3.exceptions.ClientError as e:
+    except ClientError as e:
+        # if the error code is 404, return False
         if e.response['Error']['Code'] == '404':
             return False
+        # if the error code is not 404, raise the error
         else:
             raise
