@@ -53,5 +53,5 @@ def fetch_master_index(date_yyyymmdd: str) -> bytes:
     # raise the last exception if the master index could not be fetched
 
     if last_exc is None:
-        raise RuntimeError(f"Failed to fetch master index without a captured RequestException: {url}") from last_exc
+        raise RuntimeError(f"Failed to fetch master index without a captured RequestException: {url}")
     raise RuntimeError(f"Failed to fetch master index: {url} after 5 attempts") from last_exc
