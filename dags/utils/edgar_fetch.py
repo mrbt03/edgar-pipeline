@@ -27,7 +27,7 @@ def fetch_master_index(date_yyyymmdd: str) -> bytes:
     # set the URL for the master index
     url = f"{BASE}/{yyyy}/{qtr}/{fname}"
     # set the headers for the HTTP request
-    headers = {"User-Agent": "edgar-pipeline (contact: example@example.com)"}
+    headers = {"User-Agent": "EdgarPipeline/0.1 (contact: example@example.me)"}
 
     # set the last exception to None
     last_exc = None
