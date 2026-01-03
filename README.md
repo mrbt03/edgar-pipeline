@@ -17,7 +17,6 @@ Local-first design: land raw index files in S3, load into DuckDB on disk, run db
    cd edgar-pipeline  
 
 2. Configure environment variables  
-   - Copy `.env.example` to `.env`  
    - Set:  
      - `EDGAR_S3_BUCKET` – your S3 bucket name  
      - `DUCKDB_PATH` – defaults to `/data/edgar.duckdb`  
@@ -46,7 +45,6 @@ Local-first design: land raw index files in S3, load into DuckDB on disk, run db
 - dags/dbt/edgar – dbt project (DuckDB profile in `profiles.yml`)  
 - great_expectations/ – optional GE configs (inline checks used in DAG)  
 - tests/ – pytest suite for DAG, utils, dbt, GE  
-- .env.example – environment template  
 
 ## Notes
 - Only the following env vars are used: `EDGAR_S3_BUCKET`, `DUCKDB_PATH`, `AWS_DEFAULT_REGION`.  

@@ -9,10 +9,10 @@
 # import python os module and boto3 for S3 operations
 import os
 import boto3
-
+from botocore.exceptions import ClientError
 # create an S3 client with the default region (or us-east-1 if not set)
 def s3_client():
-    # get default regiom from env var, or use us-east-1 if not set
+    # get default region from env var, or use us-east-1 if not set
     region = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
     # return an S3 client with the default region (or us-east-1 if not set)
     return boto3.client("s3", region_name=region)
@@ -20,7 +20,11 @@ def s3_client():
 # upload bytes to an S3 bucket
 def put_bytes(bucket: str, key: str, data: bytes):
     # get an S3 client and upload the bytes to the bucket
-    s3_client().put_object(Bucket=bucket, Key=key, Body=data)
+
+    try:
+        s3_client().put_object(Bucket=bucket, Key=key, Body=data)
+    except ClientError as e:
+        raise RuntimeError(f"Failed to upload bytes to S3 bucket {bucket} with key {key}: {e}") from e
 
 # check if an object exists in an S3 bucket
 def object_exists(bucket: str, key: str) -> bool:
@@ -30,9 +34,10 @@ def object_exists(bucket: str, key: str) -> bool:
         s3.head_object(Bucket=bucket, Key=key)
         return True
     # if the object does not exist, return False
-    except s3.exceptions.ClientError as e:
+    except ClientError as e:
+        # if the error code is 404, return False
         if e.response['Error']['Code'] == '404':
-            print("Object does not exist")
             return False
+        # if the error code is not 404, raise the error
         else:
-            raise e
+            raise

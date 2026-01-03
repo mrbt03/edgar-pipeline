@@ -13,16 +13,21 @@ BASE = "https://www.sec.gov/Archives/edgar/daily-index"
 
 # fetch the master index from the SEC EDGAR website
 def fetch_master_index(date_yyyymmdd: str) -> bytes:
-    # parse the date into year, month, and quarter
+    # parse the date into year, month, and quarter, if the date is not valid, raise a ValueError
+    if len(date_yyyymmdd) != 8:
+        raise ValueError(f"Invalid date: {date_yyyymmdd}")
     yyyy = date_yyyymmdd[:4]
+    # parse the month into an integer, if the month is not valid, raise a ValueError
     month = int(date_yyyymmdd[4:6])
+    if month < 1 or month > 12:
+        raise ValueError(f"Invalid month: {month} in date: {date_yyyymmdd}")
     qtr = f"QTR{((month - 1) // 3) + 1}"
     # set the filename for the master index
     fname = f"master.{date_yyyymmdd}.idx"
     # set the URL for the master index
     url = f"{BASE}/{yyyy}/{qtr}/{fname}"
     # set the headers for the HTTP request
-    headers = {"User-Agent": "edgar-pipeline (contact: mrbt4523@gmail.com)"}
+    headers = {"User-Agent": "EdgarPipeline/0.1 (contact: example@example.me)"}
 
     # set the last exception to None
     last_exc = None
@@ -46,4 +51,7 @@ def fetch_master_index(date_yyyymmdd: str) -> bytes:
             sleep_s = min(5, 0.5 * (2 ** attempt))
             time.sleep(sleep_s)
     # raise the last exception if the master index could not be fetched
-    raise last_exc
+
+    if last_exc is None:
+        raise RuntimeError(f"Failed to fetch master index without a captured RequestException: {url}")
+    raise RuntimeError(f"Failed to fetch master index: {url} after 5 attempts") from last_exc
