@@ -42,18 +42,6 @@ NOTES:
 This pipeline demonstrates a complete mini ETL:
 SEC → S3 → DuckDB → Data Quality Checks → dbt → dbt tests → Smoke Test
 """
-
-# this DAG fetches the master index from the SEC EDGAR website and loads it into a DuckDB database.
-# it includes:
-# - fetch_to_s3(): fetches the master index from the SEC EDGAR website and loads it into an S3 bucket
-# - load_to_duckdb(): loads the master index from the S3 bucket into a DuckDB database
-# - smoke_query_duckdb(): runs a smoke query on the DuckDB database
-# - verify_duckdb_post_load(): verifies that the DuckDB database has been loaded correctly
-# - dbt_test: runs dbt tests to validate data quality
-
-
-
-
 # import python os module, io module, duckdb module, boto3 module, DAG module, timezone module, PythonOperator module, BashOperator module, put_bytes module, and fetch_master_index module
 # import the DAG class from the airflow module
 # import the timezone class from the airflow module
@@ -168,32 +156,9 @@ def load_to_duckdb(**ctx):
         );
         """
     )
-    '''
-    # Debug: Show S3 data and parsed records
-    print(f"\n=== S3 Data (first 3 lines) ===")
-    for i, line in enumerate(lines[:3]):
-        print(f"  {i+1}: {line[:100]}")
-    
-    print(f"\n=== Parsed Records (first 3) ===")
-    for i, rec in enumerate(records[:3]):
-        print(f"  {i+1}: {rec}")
-    print(f"Total records: {len(records)}")
-    
-    print(f"\n=== Database Columns ===")
-    cols = con.execute("PRAGMA table_info('raw.edgar_master')").fetchall()
-    for col in cols:
-        print(f"  {col[1]} ({col[2]})")
-    
-    print(f"\n=== Current DB State ===")
-    existing = con.execute("SELECT COUNT(*) FROM raw.edgar_master").fetchone()[0]
-    print(f"Existing rows: {existing}")
-    if existing > 0:
-        sample = con.execute("SELECT * FROM raw.edgar_master LIMIT 3").fetchall()
-        for row in sample:
-            print(f"  {row}")
-    '''
+
     # delete all the rows from the edgar_master table where 
-    # the date_filed matches the execution date to ensure idempotency
+    # the index_filed_date matches the execution date to ensure idempotency
     # and avoid duplicate rows for the same data date
     con.execute("delete from raw.edgar_master where index_file_date = ?;", [ds_nodash])
     
@@ -335,7 +300,7 @@ def verify_duckdb_post_load(**ctx):
 with DAG(
     dag_id="edgar_pipeline",
     start_date=timezone.datetime(2024, 1, 1),
-    schedule="@daily",
+    schedule="None",
     catchup=False,
     default_args={"owner": "data-eng"},
 ) as dag:
