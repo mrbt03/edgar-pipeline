@@ -2,7 +2,43 @@ version: 2
 
 sources:
   - name: raw
+    description: "Raw SEC EDGAR data loaded from S3"
     schema: raw
     tables:
       - name: edgar_master
-
+        description: "Raw SEC EDGAR master index filings (may contain duplicates)"
+        # Source freshness: warn if no data loaded in 7 days
+        # Useful for detecting stale pipelines, however, I won't include the error_after clause
+        # because I won't be running the pipeline regularly
+        freshness:
+          warn_after: {count: 7, period: day}
+        loaded_at_field: loaded_at
+        columns:
+          - name: cik
+            description: "Central Index Key - SEC filer identifier"
+            tests:
+              - not_null
+          - name: company_name
+            description: "Name of the filing company"
+            tests:
+              - not_null
+          - name: form_type
+            description: "SEC form type (10-K, 10-Q, 8-K, etc.)"
+            tests:
+              - not_null
+          - name: date_filed
+            description: "Date the filing was submitted"
+            tests:
+              - not_null
+          - name: filename
+            description: "Path to the filing on SEC EDGAR"
+            tests:
+              - not_null
+          - name: loaded_at
+            description: "Timestamp when record was loaded"
+            tests:
+              - not_null
+          - name: index_file_date
+            description: "Which SEC daily index file this came from"
+            tests:
+              - not_null
