@@ -13,7 +13,7 @@ models:
           expression: "regexp_matches(cik, '^[0-9]+$')"
           config:
             where: "cik is not null"
-      # date_filed must be YYYY-MM-DD format
+      # date_filed must be YYYYMMDD format
       - dbt_utils.expression_is_true:
           expression: "regexp_matches(date_filed, '^[0-9]{8}$')"
           config:
