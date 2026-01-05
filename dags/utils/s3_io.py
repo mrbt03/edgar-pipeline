@@ -17,16 +17,10 @@ def s3_client():
     # return an S3 client with the default region (or us-east-1 if not set)
     return boto3.client("s3", region_name=region)
 
-# upload bytes to an S3 bucket
+# upload bytes to an S3 bucket (idempotent: overwrites if exists)
 def put_bytes(bucket: str, key: str, data: bytes):
-    # get an S3 client and upload the bytes to the bucket
     try:
-        # if the object does not exist, upload the bytes to the bucket
-        if not object_exists(bucket, key):
-            s3_client().put_object(Bucket=bucket, Key=key, Body=data)
-        # if the object already exists, print a message and do not overwrite
-        else:
-            print(f"object {key} already exists in bucket {bucket}, skipping upload")
+        s3_client().put_object(Bucket=bucket, Key=key, Body=data)
     except ClientError as e:
         raise RuntimeError(f"Failed to upload bytes to S3 bucket {bucket} with key {key}: {e}") from e
 
