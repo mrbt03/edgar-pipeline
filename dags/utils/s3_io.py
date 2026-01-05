@@ -20,9 +20,13 @@ def s3_client():
 # upload bytes to an S3 bucket
 def put_bytes(bucket: str, key: str, data: bytes):
     # get an S3 client and upload the bytes to the bucket
-
     try:
-        s3_client().put_object(Bucket=bucket, Key=key, Body=data)
+        # if the object does not exist, upload the bytes to the bucket
+        if not object_exists(bucket, key):
+            s3_client().put_object(Bucket=bucket, Key=key, Body=data)
+        # if the object already exists, print a message and do not overwrite
+        else:
+            print(f"object {key} already exists in bucket {bucket}, skipping upload")
     except ClientError as e:
         raise RuntimeError(f"Failed to upload bytes to S3 bucket {bucket} with key {key}: {e}") from e
 
