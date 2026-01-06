@@ -17,10 +17,8 @@ def s3_client():
     # return an S3 client with the default region (or us-east-1 if not set)
     return boto3.client("s3", region_name=region)
 
-# upload bytes to an S3 bucket
+# upload bytes to an S3 bucket (idempotent: overwrites if exists)
 def put_bytes(bucket: str, key: str, data: bytes):
-    # get an S3 client and upload the bytes to the bucket
-
     try:
         s3_client().put_object(Bucket=bucket, Key=key, Body=data)
     except ClientError as e:

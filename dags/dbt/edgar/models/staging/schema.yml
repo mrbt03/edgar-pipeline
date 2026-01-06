@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: stg_edgar_master
+    description: "Cleaned and deduplicated SEC EDGAR master index filings"
+    tests:
+      # Model-level test: ensure staging has fewer or equal rows than raw (dedup worked)
+      - dbt_utils.fewer_rows_than:
+          compare_model: source('raw', 'edgar_master')
+      # Model-level format validation tests (avoid column-level expression_is_true issues)
+      # CIK must be numeric (digits only)
+      - dbt_utils.expression_is_true:
+          expression: "regexp_matches(cik, '^[0-9]+$')"
+          config:
+            where: "cik is not null"
+      # date_filed must be YYYYMMDD format
+      - dbt_utils.expression_is_true:
+          expression: "regexp_matches(date_filed, '^[0-9]{8}$')"
+          config:
+            where: "date_filed is not null"
+      # filename must start with edgar/data/
+      - dbt_utils.expression_is_true:
+          expression: "filename like 'edgar/data/%'"
+          config:
+            where: "filename is not null"
+      # loaded_at should not be in the future
+      - dbt_utils.expression_is_true:
+          expression: "loaded_at <= current_timestamp"
+      # index_file_date must be YYYYMMDD format (8 digits)
+      - dbt_utils.expression_is_true:
+          expression: "regexp_matches(index_file_date, '^[0-9]{8}$')"
+          config:
+            where: "index_file_date is not null"
+    columns:
+      - name: cik
+        description: "Central Index Key - unique identifier for the filer (up to 10 digits)"
+        tests:
+          - not_null
+      - name: company_name
+        description: "Name of the filing company"
+        tests:
+          - not_null
+          - dbt_utils.not_empty_string
+      - name: form_type
+        description: "SEC form type (10-K, 10-Q, 8-K, etc.)"
+        tests:
+          - not_null
+          - dbt_utils.not_empty_string
+      - name: date_filed
+        description: "Date the filing was submitted to SEC (YYYYMMDD format)"
+        tests:
+          - not_null
+      - name: filename
+        description: "Unique path to the filing on SEC EDGAR"
+        tests:
+          - not_null
+          - unique
+      - name: loaded_at
+        description: "Timestamp when the record was loaded into the raw table"
+        tests:
+          - not_null
+      - name: index_file_date
+        description: "Which SEC daily index file this record came from (YYYYMMDD)"
+        tests:
+          - not_null

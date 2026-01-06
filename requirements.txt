@@ -2,7 +2,6 @@
 apache-airflow-providers-amazon
 boto3
 requests
-great_expectations
 duckdb
 duckdb-engine
 dbt-duckdb
