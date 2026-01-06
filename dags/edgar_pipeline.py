@@ -53,9 +53,8 @@ SEC → S3 → DuckDB → Data Quality Checks → dbt → dbt tests → Smoke Te
 import os
 import io
 import duckdb
-from datetime import datetime
 from airflow import DAG
-from airflow.utils import timezone, datetime
+from airflow.utils import timezone
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.operators.bash import BashOperator
 from dags.utils.s3_io import put_bytes, s3_client
@@ -125,7 +124,7 @@ def load_to_duckdb(**ctx):
             continue
         # append the data to the records list as a tuple
         # loaded_at should be current timestamp when data is loaded, not the execution date
-        loaded_at = datetime.now(timezone.utc)
+        loaded_at = timezone.utcnow()
         records.append((cik.strip(), company_name.strip(), form_type.strip(), date_filed.strip(), filename.strip(), loaded_at, ds_nodash))
 
     # get parent directory of the duckdb path or use the current directory if not set
