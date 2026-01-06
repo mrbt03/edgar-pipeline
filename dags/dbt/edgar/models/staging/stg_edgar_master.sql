@@ -19,4 +19,3 @@ select
   cast(cik as text) as cik, company_name, form_type, date_filed, filename, loaded_at, index_file_date
 from deduplicated
 where row_num = 1
-
