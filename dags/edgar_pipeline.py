@@ -55,7 +55,7 @@ import io
 import duckdb
 from datetime import datetime
 from airflow import DAG
-from airflow.utils import timezone
+from airflow.utils import timezone, datetime
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.operators.bash import BashOperator
 from dags.utils.s3_io import put_bytes, s3_client
@@ -125,7 +125,7 @@ def load_to_duckdb(**ctx):
             continue
         # append the data to the records list as a tuple
         # loaded_at should be current timestamp when data is loaded, not the execution date
-        loaded_at = datetime.now()
+        loaded_at = datetime.now(timezone.utc)
         records.append((cik.strip(), company_name.strip(), form_type.strip(), date_filed.strip(), filename.strip(), loaded_at, ds_nodash))
 
     # get parent directory of the duckdb path or use the current directory if not set
@@ -300,7 +300,7 @@ def verify_duckdb_post_load(**ctx):
 with DAG(
     dag_id="edgar_pipeline",
     start_date=timezone.datetime(2024, 1, 1),
-    schedule="None",
+    schedule=None,
     catchup=False,
     default_args={"owner": "data-eng"},
 ) as dag:
