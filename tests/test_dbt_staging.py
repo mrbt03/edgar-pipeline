@@ -4,6 +4,14 @@ from pathlib import Path
 
 def test_dbt_run_staging(tmp_path):
     # Copy the dbt project to a temp dir to avoid modifying workspace
+    """
+    Run dbt on a copied project using a temporary DuckDB and assert the staging model loads one row.
+    
+    Seeds a temporary DuckDB with a single row in raw.edgar_master, sets DUCKDB_PATH to that database, copies the dbt project into the provided temporary directory, runs `dbt deps` and `dbt run` against the copied project, and verifies that `main_staging.stg_edgar_master` contains exactly one row.
+    
+    Parameters:
+        tmp_path (pathlib.Path): Temporary directory provided by pytest for copying the project and creating the DuckDB file.
+    """
     project_src = Path('/usr/local/airflow/dags/dbt/edgar')
     project_dst = tmp_path / 'edgar'
     shutil.copytree(project_src, project_dst)
