@@ -4,6 +4,11 @@ from dags.edgar_pipeline import smoke_query_duckdb
 
 
 def test_smoke_query_returns_counts(tmp_path, monkeypatch):
+    """
+    Integration test that verifies smoke_query_duckdb returns correct counts by form type.
+    
+    Creates a temporary DuckDB database, inserts sample rows into raw.edgar_master, invokes smoke_query_duckdb, and asserts that the returned counts contain 10-K = 2 and 10-Q = 1.
+    """
     duckdb_path = tmp_path / "edgar.duckdb"
     os.environ["DUCKDB_PATH"] = str(duckdb_path)
     con = duckdb.connect(str(duckdb_path))
@@ -21,5 +26,4 @@ def test_smoke_query_returns_counts(tmp_path, monkeypatch):
     forms = dict(rows)
     assert forms.get("10-K") == 2
     assert forms.get("10-Q") == 1
-
 

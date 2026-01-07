@@ -18,10 +18,26 @@ def test_duckdb_path_parent_created(tmp_path, monkeypatch):
             self._data = data
 
         def read(self):
+            """
+            Return the stored byte content.
+            
+            Returns:
+                bytes: The raw bytes previously provided to the instance.
+            """
             return self._data
 
     class FakeS3:
         def get_object(self, Bucket=None, Key=None):
+            """
+            Return a fake S3 GetObject response containing a small EDGAR CSV payload.
+            
+            The returned mapping uses the same shape as boto3's get_object result: the "Body"
+            value is an object whose read() method yields a bytes CSV with a header and one
+            data row (CIK, Company Name, Form Type, Date Filed, Filename).
+            
+            Returns:
+                dict: A dictionary with key "Body" whose value is a FakeBody wrapping the CSV bytes.
+            """
             sample = (
                 b"CIK|Company Name|Form Type|Date Filed|Filename\n"
                 b"1|A|10-K|2024-01-31|f1\n"
@@ -42,7 +58,6 @@ def test_duckdb_path_parent_created(tmp_path, monkeypatch):
         assert cnt == 1
     finally:
         con.close()
-
 
 
 
