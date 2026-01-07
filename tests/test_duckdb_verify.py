@@ -1,4 +1,5 @@
 import os
+import pytest
 import duckdb
 from dags.edgar_pipeline import verify_duckdb_post_load
 
@@ -30,8 +31,6 @@ def test_verify_post_load_fails_on_empty(tmp_path):
     )
     con.close()
 
-    try:
+    # verify_duckdb_post_load should raise AssertionError when table is empty
+    with pytest.raises(AssertionError):
         verify_duckdb_post_load()
-        assert False, "Expected AssertionError"
-    except AssertionError:
-        pass
