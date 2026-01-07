@@ -9,10 +9,10 @@ def test_smoke_query_returns_counts(tmp_path, monkeypatch):
     con = duckdb.connect(str(duckdb_path))
     con.execute("create schema if not exists raw;")
     con.execute(
-        "create table raw.edgar_master (cik text, company_name text, form_type text, date_filed text, filename text)"
+        "create table raw.edgar_master (cik text, company_name text, form_type text, date_filed text, filename text, loaded_at timestamp, index_file_date text)"
     )
     con.execute(
-        "insert into raw.edgar_master values ('1','A','10-K','2024-01-31','f1'), ('2','B','10-Q','2024-01-31','f2'), ('3','C','10-K','2024-01-31','f3')"
+        "insert into raw.edgar_master values ('1','A','10-K','2024-01-31','f1', '2024-01-31 12:00:00', '20240131'), ('2','B','10-Q','2024-01-31','f2', '2024-01-31 12:00:00', '20240131'), ('3','C','10-K','2024-01-31','f3', '2024-01-31 12:00:00', '20240131')"
     )
     con.close()
 

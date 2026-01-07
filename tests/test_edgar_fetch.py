@@ -43,7 +43,7 @@ def test_fetch_master_index_success_builds_correct_request(monkeypatch):
     )
     # Production-style headers and timeout
     assert "User-Agent" in captured["headers"]
-    assert "edgar-pipeline" in captured["headers"]["User-Agent"]
+    assert "EdgarPipeline" in captured["headers"]["User-Agent"]
     assert captured["timeout"] == 30
 
     # test the fetch_master_index function retries then succeeds by failing first two times and succeeding on the third time
