@@ -15,8 +15,8 @@ def test_dbt_run_staging(tmp_path):
     import duckdb
     con = duckdb.connect(str(duckdb_path))
     con.execute('create schema if not exists raw;')
-    con.execute('create table raw.edgar_master (cik text, company_name text, form_type text, date_filed text, filename text);')
-    con.execute("insert into raw.edgar_master values ('1','A','10-K','2024-01-31','f1')")
+    con.execute('create table raw.edgar_master (cik text, company_name text, form_type text, date_filed text, filename text, loaded_at timestamp, index_file_date text);')
+    con.execute("insert into raw.edgar_master values ('1','A','10-K','2024-01-31','f1', '2024-01-31 12:00:00', '20240131')")
     con.close()
 
     # Run dbt deps + run using local profiles.yml
