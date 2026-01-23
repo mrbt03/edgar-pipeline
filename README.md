@@ -33,7 +33,7 @@ Before using this pipeline, understand what the SEC offers directly at no cost:
 
 **Rate limits:** ~10 requests/second with required User-Agent header.
 
-**This pipeline builds on the daily index files.** The SEC already provides excellent structured data—this project adds orchestration, storage, and transformation layers on top.
+**This pipeline builds on the daily index files.** The SEC already provides excellent structured data-this project adds orchestration, storage, and transformation layers on top.
 
 ---
 
@@ -81,7 +81,7 @@ print(f"Extracted {len(z.namelist())} company files")
 
 **This gives you:** Every public company's complete filing history in JSON format.
 
-**This pipeline is for when:** That script needs production orchestration—scheduling, retries, monitoring, transformations, data quality checks, and auditability.
+**This pipeline is for when:** That script needs production orchestration-scheduling, retries, monitoring, transformations, data quality checks, and auditability.
 
 ---
 
@@ -221,7 +221,7 @@ SEC EDGAR (daily .idx) → S3 (raw archive) → DuckDB (parsed) → dbt (transfo
 - Data exceeds local storage capacity
 - Need enterprise SLAs and managed backups
 
-The dbt models port directly—change adapter from `dbt-duckdb` to `dbt-snowflake`/`dbt-redshift`.
+The dbt models port directly-change adapter from `dbt-duckdb` to `dbt-snowflake`/`dbt-redshift`.
 
 ---
 
