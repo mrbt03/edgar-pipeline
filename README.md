@@ -2,7 +2,7 @@
 
 **A reference implementation for building your own SEC EDGAR data pipeline.**
 
-This is a blueprint demonstrating how to orchestrate SEC filing metadata ingestion using Airflow, S3, DuckDB, and dbt. It is not a turnkey SaaS product—it's a starting point for teams that want to understand and control their SEC data infrastructure.
+This is a blueprint demonstrating how to orchestrate SEC filing metadata ingestion using Airflow, S3, DuckDB, and dbt. It is not a turnkey SaaS product-it's a starting point for teams that want to understand and control their SEC data infrastructure.
 
 ---
 
